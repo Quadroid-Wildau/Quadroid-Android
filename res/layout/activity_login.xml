@@ -1,16 +1,94 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scroller1"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".LoginActivity" >
+    android:layout_height="match_parent" >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        tools:context=".LoginActivity" >
 
-</RelativeLayout>
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="wrap_content"
+            android:layout_height="128dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/logo_large" />
+
+        <TextView
+            android:id="@+id/tv_must_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/textView1"
+            android:layout_below="@+id/textView1"
+            android:layout_marginRight="24dp"
+            android:text="@string/must_login_text" />
+
+        <EditText
+            android:id="@+id/edit_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/tv_must_login"
+            android:layout_alignRight="@+id/tv_must_login"
+            android:layout_below="@+id/tv_must_login"
+            android:layout_marginTop="16dp"
+            android:ems="10"
+            android:hint="@string/username" >
+
+            <requestFocus />
+        </EditText>
+
+        <EditText
+            android:id="@+id/edit_password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/edit_username"
+            android:layout_alignRight="@+id/edit_username"
+            android:layout_below="@+id/edit_username"
+            android:layout_marginTop="8dp"
+            android:ems="10"
+            android:hint="@string/password"
+            android:inputType="textPassword" />
+
+        <Button
+            android:id="@+id/bt_logout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/bt_login"
+            android:layout_alignParentBottom="true"
+            android:layout_alignRight="@+id/edit_password"
+            android:layout_below="@+id/bt_login"
+            android:layout_marginTop="16dp"
+            android:enabled="false"
+            android:onClick="onLogoutClick"
+            android:text="@string/logged_out" />
+
+        <Button
+            android:id="@+id/bt_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/edit_password"
+            android:layout_alignRight="@+id/edit_password"
+            android:layout_below="@+id/edit_password"
+            android:layout_marginTop="64dp"
+            android:onClick="onLoginClick"
+            android:text="@string/login" />
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/imageView1"
+            android:layout_marginLeft="24dp"
+            android:text="@string/welcome"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+    </RelativeLayout>
+
+</ScrollView>

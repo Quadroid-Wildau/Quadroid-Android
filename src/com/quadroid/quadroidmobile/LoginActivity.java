@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.androidquery.AQuery;
 import com.androidquery.callback.AjaxCallback;
 import com.androidquery.callback.AjaxStatus;
+import com.androidquery.util.AQUtility;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -75,6 +76,15 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		super.onResume();
 		checkPlayServices();
 		configureViews();
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		
+		if (isTaskRoot()) {
+			AQUtility.cleanCacheAsync(this);
+		}
 	}
 	
 //***************************************************************************************************************
@@ -237,7 +247,17 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 			});
 		} else {
 			//There was something wrong while registering the device
+			
+			//Hide the progress dialog
 			cancelProgressDialog();
+			
+			//Remove login
+			PreferenceUtils.removeFromPreferences(this, R.string.pref_key_login_token);
+			
+			//Reconfigure views
+			configureViews();
+			
+			//Show error
 			Toast.makeText(LoginActivity.this, R.string.error_registering_gcm, Toast.LENGTH_LONG).show();
 		}
 	}

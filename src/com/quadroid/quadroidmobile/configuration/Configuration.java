@@ -22,4 +22,13 @@ public class Configuration {
 	 * Log folder (part of root folder) on memory card.
 	 */
 	public static final String LOG_FOLDER = "logs";
+	
+	/**
+	 * GCM Sender ID
+     */
+	public static final String SENDER_ID = "Your-Sender-ID";
+	
+	public static final String LOGIN_URL = "http://api.quadroid.com/users/login";
+	
+	public static final String GCM_SETUP_URL = "http://api.quadroid.com/users/gcmsetup";
 }

@@ -95,6 +95,34 @@ public class PreferenceUtils {
 		
 		return preferences.contains(key);
 	}
+	
+	/**
+	 * Removes Preference by key
+	 * @param context
+	 * 			A valid context
+	 * @param key
+	 * 			The key to remove
+	 */
+	public static void removeFromPreferences(Context context, String key) {
+		if (preferences == null)
+			preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		if (editor == null)
+			editor = preferences.edit();
+		
+		editor.remove(key);
+		editor.commit();
+	}
+	
+	/**
+	 * Removes Preference by key
+	 * @param context
+	 * 			A valid context
+	 * @param keyResourceId
+	 * 			The key to remove
+	 */
+	public static void removeFromPreferences(Context context, int keyResourceId) {
+		removeFromPreferences(context, context.getString(keyResourceId));
+	}
 }
 
 

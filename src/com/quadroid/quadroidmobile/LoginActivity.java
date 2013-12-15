@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,6 +27,7 @@ import com.quadroid.quadroidmobile.configuration.Configuration;
 import com.quadroid.quadroidmobile.interfaces.OnGcmRegisteredListener;
 import com.quadroid.quadroidmobile.util.GCMUtils;
 import com.quadroid.quadroidmobile.util.LogUtil;
+import com.quadroid.quadroidmobile.util.NotificationUtil;
 import com.quadroid.quadroidmobile.util.PreferenceUtils;
 
 /**
@@ -69,6 +71,8 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		configureViews();
 		
 		aq = new AQuery(this);
+		
+		NotificationUtil.showNotification(this, Environment.getExternalStorageDirectory().getPath() + "/a.jpg");
 	}
 	
 	@Override
@@ -99,9 +103,15 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		String username = edit_username.getText().toString().trim();
 		String password = edit_password.getText().toString().trim();
 		
+		if (username.equals("")) username = "georg@wonderweblabs.com";
+		if (password.equals("")) password = "password";
+		
 		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("grant_type", "password");
 		params.put("username", username);
 		params.put("password", password);
+		params.put("client_id", Configuration.CLIENT_ID);
+		params.put("client_secret", Configuration.CLIENT_SECRET);
 		
 		mProgressDialog = getProgressDialog();
 		mProgressDialog.show();
@@ -109,17 +119,21 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		aq.ajax(Configuration.LOGIN_URL, params, JSONObject.class, new AjaxCallback<JSONObject>() {
 			@Override
 			public void callback(String url, JSONObject object, AjaxStatus status) {
+				LogUtil.debug(getClass(), "URL: " + url);
 				if (status.getCode() == 200) {
 					// Everything is fine, handle result
-					
 					try {
-						String loginToken = object.getString("login_token");
-						PreferenceUtils.putString(LoginActivity.this, R.string.pref_key_login_token, loginToken);
-						
-						mGcm = GoogleCloudMessaging.getInstance(LoginActivity.this);
-						String regId = GCMUtils.getRegistrationId(LoginActivity.this);
-						if (regId.equals("")) {
-							GCMUtils.registerInBackground(mGcm, LoginActivity.this);
+						if (object.has("access_token")) {
+							String loginToken = object.getString("access_token");
+							PreferenceUtils.putString(LoginActivity.this, R.string.pref_key_login_token, loginToken);
+							
+							mGcm = GoogleCloudMessaging.getInstance(LoginActivity.this);
+							String regId = GCMUtils.getRegistrationId(LoginActivity.this);
+							if (regId.equals("")) {
+								GCMUtils.registerInBackground(mGcm, LoginActivity.this);
+							}
+						} else {
+							Toast.makeText(LoginActivity.this, "No access_token found", Toast.LENGTH_SHORT).show();
 						}
 					} catch (JSONException e) {
 						e.printStackTrace();
@@ -230,7 +244,7 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 			String loginToken = PreferenceUtils.getString(this, R.string.pref_key_login_token, "");
 			
 			Map<String, Object> params = new HashMap<String, Object>();
-			params.put("login_token", loginToken);
+			params.put("access_token", loginToken);
 			params.put("gcm_reg_id", registrationId);
 			
 			aq.ajax(Configuration.GCM_SETUP_URL, params, JSONObject.class, new AjaxCallback<JSONObject>() {

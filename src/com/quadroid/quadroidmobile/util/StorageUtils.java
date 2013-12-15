@@ -59,4 +59,14 @@ public class StorageUtils {
 		long bytesAvailable = (long)stat.getBlockSize() *(long)stat.getBlockCount();
 		return bytesAvailable / 1048576;
 	}	
+	
+	public static File getImageFile(int imageId) {
+		return new File(
+						Environment.getExternalStorageDirectory() + 
+						File.separator + 
+						Configuration.ROOT_FOLDER + 
+						File.separator +
+						Configuration.ALARM_FOLDER,
+						imageId + ".png");
+	}
 }

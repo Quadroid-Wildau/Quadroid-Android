@@ -3,9 +3,6 @@ package com.quadroid.quadroidmobile;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
@@ -16,13 +13,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.androidquery.AQuery;
-import com.androidquery.callback.AjaxCallback;
-import com.androidquery.callback.AjaxStatus;
-import com.androidquery.util.AQUtility;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.gson.JsonObject;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
 import com.quadroid.quadroidmobile.configuration.Configuration;
 import com.quadroid.quadroidmobile.interfaces.OnGcmRegisteredListener;
 import com.quadroid.quadroidmobile.util.GCMUtils;
@@ -55,9 +51,6 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 	
 	private GoogleCloudMessaging mGcm;
 	
-	private AQuery aq;
-	
-	
 //***************************************************************************************************************
 //	Activity related
 //***************************************************************************************************************
@@ -69,8 +62,6 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		findViews();
 		
 		configureViews();
-		
-		aq = new AQuery(this);
 		
 		NotificationUtil.showNotification(this, Environment.getExternalStorageDirectory().getPath() + "/a.jpg");
 	}
@@ -85,10 +76,6 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		
-		if (isTaskRoot()) {
-			AQUtility.cleanCacheAsync(this);
-		}
 	}
 	
 //***************************************************************************************************************
@@ -106,41 +93,35 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		if (username.equals("")) username = "georg@wonderweblabs.com";
 		if (password.equals("")) password = "password";
 		
-		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("grant_type", "password");
-		params.put("username", username);
-		params.put("password", password);
-		params.put("client_id", Configuration.CLIENT_ID);
-		params.put("client_secret", Configuration.CLIENT_SECRET);
-		
 		mProgressDialog = getProgressDialog();
 		mProgressDialog.show();
 		
-		aq.ajax(Configuration.LOGIN_URL, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+		Ion.with(this, Configuration.LOGIN_URL)
+		.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
+		.setBodyParameter("grant_type", "password")
+		.setBodyParameter("username", username)
+		.setBodyParameter("password", password)
+		.setBodyParameter("client_id", Configuration.CLIENT_ID)
+		.setBodyParameter("client_secret", Configuration.CLIENT_SECRET)
+		.asJsonObject()
+		.setCallback(new FutureCallback<JsonObject>() {
 			@Override
-			public void callback(String url, JSONObject object, AjaxStatus status) {
-				LogUtil.debug(getClass(), "URL: " + url);
-				if (status.getCode() == 200) {
-					// Everything is fine, handle result
-					try {
-						if (object.has("access_token")) {
-							String loginToken = object.getString("access_token");
-							PreferenceUtils.putString(LoginActivity.this, R.string.pref_key_login_token, loginToken);
-							
-							mGcm = GoogleCloudMessaging.getInstance(LoginActivity.this);
-							String regId = GCMUtils.getRegistrationId(LoginActivity.this);
-							if (regId.equals("")) {
-								GCMUtils.registerInBackground(mGcm, LoginActivity.this);
-							}
-						} else {
-							Toast.makeText(LoginActivity.this, "No access_token found", Toast.LENGTH_SHORT).show();
-						}
-					} catch (JSONException e) {
-						e.printStackTrace();
+			public void onCompleted(Exception e, JsonObject object) {
+				if (object != null && object.has("access_token")) {
+					String loginToken = object.get("access_token").getAsString();
+					PreferenceUtils.putString(LoginActivity.this, R.string.pref_key_login_token, loginToken);
+					
+					mGcm = GoogleCloudMessaging.getInstance(LoginActivity.this);
+					String regId = GCMUtils.getRegistrationId(LoginActivity.this);
+					if (regId.equals("")) {
+						GCMUtils.registerInBackground(mGcm, LoginActivity.this);
 					}
 				} else {
+					String error = String.format(
+											getString(R.string.error_login), 
+													  e == null ? "No access_token_found" : e.getMessage());
+					Toast.makeText(LoginActivity.this, error, Toast.LENGTH_SHORT).show();
 					cancelProgressDialog();
-					Toast.makeText(LoginActivity.this, "HTTP Error " + status.getCode() + ": " + status.getError(), Toast.LENGTH_LONG).show();
 				}
 			}
 		});
@@ -247,15 +228,18 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 			params.put("access_token", loginToken);
 			params.put("gcm_reg_id", registrationId);
 			
-			aq.ajax(Configuration.GCM_SETUP_URL, params, JSONObject.class, new AjaxCallback<JSONObject>() {
+			Ion.with(this, Configuration.GCM_SETUP_URL)
+			.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
+			.addHeader("Authorization", "Bearer " + loginToken)
+			.asJsonObject()
+			.setCallback(new FutureCallback<JsonObject>() {
 				@Override
-				public void callback(String url, JSONObject object, AjaxStatus status) {
-					if (status.getCode() == 200) {
-						// Everything is fine
+				public void onCompleted(Exception e, JsonObject object) {
+					if (e == null) {
 						cancelProgressDialog();
 					} else {
+						Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
 						cancelProgressDialog();
-						Toast.makeText(LoginActivity.this, "HTTP Error " + status.getCode() + ": " + status.getError(), Toast.LENGTH_LONG).show();
 					}
 				}
 			});

@@ -1,12 +1,10 @@
 package com.quadroid.quadroidmobile;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -96,10 +94,12 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		mProgressDialog = getProgressDialog();
 		mProgressDialog.show();
 		
+		LogUtil.debug(getClass(), "Starting Login Process...");
 		Ion.with(this, Configuration.LOGIN_URL)
 		.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
+		.setLogging("Quadroid", Log.DEBUG)
 		.setBodyParameter("grant_type", "password")
-		.setBodyParameter("username", username)
+		.setBodyParameter("email", username)
 		.setBodyParameter("password", password)
 		.setBodyParameter("client_id", Configuration.CLIENT_ID)
 		.setBodyParameter("client_secret", Configuration.CLIENT_SECRET)
@@ -107,22 +107,37 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		.setCallback(new FutureCallback<JsonObject>() {
 			@Override
 			public void onCompleted(Exception e, JsonObject object) {
+				//Debug output
+				if (object != null)
+					LogUtil.debug(getClass(), "Received JSON: " + object.toString());
+				
+				//Check if the JSON contains all necessary data
 				if (object != null && object.has("access_token")) {
+					
+					//Extract and save login token
 					String loginToken = object.get("access_token").getAsString();
+					LogUtil.debug(getClass(), "Access Token: " + loginToken);
 					PreferenceUtils.putString(LoginActivity.this, R.string.pref_key_login_token, loginToken);
 					
+					//Get GCM instance and cached registration id
 					mGcm = GoogleCloudMessaging.getInstance(LoginActivity.this);
 					String regId = GCMUtils.getRegistrationId(LoginActivity.this);
+					LogUtil.debug(getClass(), "Cached GCM Registration ID: " + regId);
+					
+					//register as new GCM device if cached registration id is empty
 					if (regId.equals("")) {
 						GCMUtils.registerInBackground(mGcm, LoginActivity.this);
 					}
 				} else {
+					//print error if JSON does not contain necessary data or is empty
 					String error = String.format(
 											getString(R.string.error_login), 
 													  e == null ? "No access_token_found" : e.getMessage());
 					Toast.makeText(LoginActivity.this, error, Toast.LENGTH_SHORT).show();
+					e.printStackTrace();
 					cancelProgressDialog();
 				}
+				LogUtil.debug(getClass(), "Login Process finished");
 			}
 		});
 	}
@@ -221,30 +236,33 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		PreferenceUtils.putString(this, R.string.pref_key_gcm_reg_id, registrationId);
 		
 		if (!registrationId.equals("")) {
-			//Now we got both, Login Token and GCM Id, so we can send it to our backend
+			//Now we got both, login token and GCM registration Id, so we can send it to our backend
 			String loginToken = PreferenceUtils.getString(this, R.string.pref_key_login_token, "");
-			
-			Map<String, Object> params = new HashMap<String, Object>();
-			params.put("access_token", loginToken);
-			params.put("gcm_reg_id", registrationId);
 			
 			Ion.with(this, Configuration.GCM_SETUP_URL)
 			.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
 			.addHeader("Authorization", "Bearer " + loginToken)
+			.setBodyParameter("gcm_device[registration_id]", registrationId)
 			.asJsonObject()
 			.setCallback(new FutureCallback<JsonObject>() {
 				@Override
 				public void onCompleted(Exception e, JsonObject object) {
+					//Debug output
+					if (object != null)
+						LogUtil.debug(getClass(), "Received JSON: " + object.toString());
+					
+					//No errors? Great!
 					if (e == null) {
 						cancelProgressDialog();
 					} else {
+						//Show error if there was one
 						Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
 						cancelProgressDialog();
 					}
 				}
 			});
 		} else {
-			//There was something wrong while registering the device
+			//There went something wrong while registering the device
 			
 			//Hide the progress dialog
 			cancelProgressDialog();

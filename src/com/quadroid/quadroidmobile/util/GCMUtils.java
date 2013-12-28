@@ -38,7 +38,9 @@ public class GCMUtils {
 	        protected String doInBackground(Void... params) {
 	            String regId = "";
 	            try {
+	            	LogUtil.debug(getClass(), "Starting GCM Registration process...");
 	                regId = gcm.register(Configuration.SENDER_ID);
+	                LogUtil.debug(getClass(), "Got GCM Registration ID: " + regId);
 	            } catch (IOException ex) {
 	                regId = "";
 	            }
@@ -47,6 +49,7 @@ public class GCMUtils {
 
 	        @Override
 	        protected void onPostExecute(String regId) {
+	        	LogUtil.debug(getClass(), "GCM Registration process finished");
 	            if (listener != null) listener.onGcmRegistered(regId);
 	        }
 	    }.execute(null, null, null);

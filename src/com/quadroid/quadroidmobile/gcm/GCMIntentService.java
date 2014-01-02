@@ -45,7 +45,7 @@ public class GCMIntentService extends IntentService {
 			if (lmId >= 0) {
 				final String loginToken = PreferenceUtils.getString(getApplicationContext(), R.string.pref_key_login_token, "");
 				
-				Ion.with(getApplicationContext(), Configuration.LANDMARK_ALARM_URL)
+				Ion.with(getApplicationContext(), Configuration.LANDMARK_ALARM_URL + lmId)
 				.addHeader("Authorization", "Bearer " + loginToken)
 				.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
 				.asJsonObject()
@@ -57,12 +57,18 @@ public class GCMIntentService extends IntentService {
 	private FutureCallback<JsonObject> mLandmarkCallback = new FutureCallback<JsonObject>() {		
 		@Override
 		public void onCompleted(Exception e, JsonObject object) {
-			if (object != null && object.has("image_url")) {
-				final String imageUrl = object.get("image_url").getAsString();
-				final String latitude = object.get("latitude").getAsString();
-				final String longitude = object.get("longitude").getAsString();
-				final String date = object.get("detection_date").getAsString();
-				final int id = object.get("id").getAsInt();
+			if (e != null) {
+				Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+				e.printStackTrace();
+			}
+			
+			if (object != null && object.has("landmark_alert")) {
+				JsonObject lmAlert = object.getAsJsonObject("landmark_alert");
+				final String imageUrl = lmAlert.get("image_path").getAsString();
+				final float latitude = lmAlert.get("latitude").getAsFloat();
+				final float longitude = lmAlert.get("longitude").getAsFloat();
+				final long date = lmAlert.get("detection_date").getAsLong();
+				final int id = lmAlert.get("id").getAsInt();
 				
 				Ion.with(getApplicationContext())
 				.load(imageUrl)
@@ -78,10 +84,11 @@ public class GCMIntentService extends IntentService {
 	private class CustomBitmapCallback implements FutureCallback<Bitmap> {
 
 		//used for caching
-		private String latitude, longitude, date;
+		private float latitude, longitude;
+		private long date;
 		private int id;
 		
-		public CustomBitmapCallback(String latitude, String longitude, String date, int id) {
+		public CustomBitmapCallback(float latitude, float longitude, long date, int id) {
 			this.date = date;
 			this.latitude = latitude;
 			this.longitude = longitude;

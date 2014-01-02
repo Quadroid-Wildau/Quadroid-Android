@@ -243,6 +243,14 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 			.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
 			.addHeader("Authorization", "Bearer " + loginToken)
 			.setBodyParameter("gcm_device[registration_id]", registrationId)
+//			.asString()
+//			.setCallback(new FutureCallback<String>() {
+//
+//				@Override
+//				public void onCompleted(Exception e, String result) {
+//					LogUtil.debug(getClass(), "Result: " + result);
+//				}
+//			});
 			.asJsonObject()
 			.setCallback(new FutureCallback<JsonObject>() {
 				@Override
@@ -257,6 +265,8 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 					} else {
 						//Show error if there was one
 						Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+						PreferenceUtils.removeFromPreferences(LoginActivity.this, R.string.pref_key_login_token);
+						PreferenceUtils.removeFromPreferences(LoginActivity.this, R.string.pref_key_gcm_reg_id);
 						cancelProgressDialog();
 					}
 				}
@@ -269,6 +279,7 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 			
 			//Remove login
 			PreferenceUtils.removeFromPreferences(this, R.string.pref_key_login_token);
+			PreferenceUtils.removeFromPreferences(this, R.string.pref_key_gcm_reg_id);
 			
 			//Reconfigure views
 			configureViews();

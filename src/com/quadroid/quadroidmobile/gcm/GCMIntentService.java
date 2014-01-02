@@ -12,12 +12,17 @@ import com.koushikdutta.ion.Ion;
 import com.quadroid.quadroidmobile.R;
 import com.quadroid.quadroidmobile.configuration.Configuration;
 import com.quadroid.quadroidmobile.util.BitmapUtils;
+import com.quadroid.quadroidmobile.util.LogUtil;
 import com.quadroid.quadroidmobile.util.NotificationUtil;
 import com.quadroid.quadroidmobile.util.PreferenceUtils;
 
 public class GCMIntentService extends IntentService {
 	
 	private Intent intent;
+	
+	public GCMIntentService() {
+		super("QuadroidGCMIntentService");
+	}
 	
 	public GCMIntentService(String name) {
 		super("QuadroidGCMIntentService");
@@ -31,8 +36,11 @@ public class GCMIntentService extends IntentService {
 		
 		if (!extras.isEmpty()) {
 			//Message contains payload
+			LogUtil.debug(getClass(), "GCM notification has payload");
 			
-			int lmId = extras.getInt("lmAlarmId", -1);
+			int lmId = Integer.parseInt(extras.getString("lmAlarmId"));
+			
+			LogUtil.debug(getClass(), "Landmark alarm id: " + lmId);
 			
 			if (lmId >= 0) {
 				final String loginToken = PreferenceUtils.getString(getApplicationContext(), R.string.pref_key_login_token, "");
@@ -62,7 +70,7 @@ public class GCMIntentService extends IntentService {
 				.setCallback(new CustomBitmapCallback(latitude, longitude, date, id));
 			} else {
 				Toast.makeText(getApplicationContext(), R.string.error_lm_alarm_ivalid, Toast.LENGTH_SHORT).show();
-				GCMWakefulIBroadcastReceiver.completeWakefulIntent(intent);
+				GCMWakefulBroadcastReceiver.completeWakefulIntent(intent);
 			}
 		}
 	};
@@ -93,7 +101,7 @@ public class GCMIntentService extends IntentService {
 					NotificationUtil.showNotification(getApplicationContext(), filepath);
 				}
 			}
-			GCMWakefulIBroadcastReceiver.completeWakefulIntent(intent);
+			GCMWakefulBroadcastReceiver.completeWakefulIntent(intent);
 		}
 		
 	}	

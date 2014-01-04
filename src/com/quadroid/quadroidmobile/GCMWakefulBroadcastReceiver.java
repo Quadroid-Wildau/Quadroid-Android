@@ -1,4 +1,4 @@
-package com.quadroid.quadroidmobile.gcm;
+package com.quadroid.quadroidmobile;
 
 import com.quadroid.quadroidmobile.util.LogUtil;
 

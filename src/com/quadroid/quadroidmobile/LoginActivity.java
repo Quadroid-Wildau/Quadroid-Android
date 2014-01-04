@@ -1,10 +1,11 @@
 package com.quadroid.quadroidmobile;
 
+import java.io.IOException;
+
+import net.louislam.android.L;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,7 +22,6 @@ import com.quadroid.quadroidmobile.configuration.Configuration;
 import com.quadroid.quadroidmobile.interfaces.OnGcmRegisteredListener;
 import com.quadroid.quadroidmobile.util.GCMUtils;
 import com.quadroid.quadroidmobile.util.LogUtil;
-import com.quadroid.quadroidmobile.util.NotificationUtil;
 import com.quadroid.quadroidmobile.util.PreferenceUtils;
 
 /**
@@ -57,11 +57,9 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_login);
+		
 		findViews();
-		
 		configureViews();
-		
-		NotificationUtil.showNotification(this, Environment.getExternalStorageDirectory().getPath() + "/a.jpg");
 	}
 	
 	@Override
@@ -91,13 +89,34 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		if (username.equals("")) username = "georg@wonderweblabs.com";
 		if (password.equals("")) password = "password";
 		
-		mProgressDialog = getProgressDialog();
-		mProgressDialog.show();
+		login(username, password);
+	}
+	
+	public void onLogoutClick(View v) {
+		if (mGcm == null)
+			mGcm = GoogleCloudMessaging.getInstance(this);
 		
+		try {
+			mGcm.unregister();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		PreferenceUtils.removeFromPreferences(this, R.string.pref_key_gcm_reg_id);
+		PreferenceUtils.removeFromPreferences(this, R.string.pref_key_login_token);
+		configureViews();
+	}
+
+//***************************************************************************************************************
+//	Helpers
+//***************************************************************************************************************
+	
+	private void login(String username, String password) {
 		LogUtil.debug(getClass(), "Starting Login Process...");
+		mProgressDialog = getProgressDialog(R.string.logging_in);
+		mProgressDialog.show();
 		Ion.with(this, Configuration.LOGIN_URL)
 		.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
-		.setLogging("Quadroid", Log.DEBUG)
 		.setBodyParameter("grant_type", "password")
 		.setBodyParameter("email", username)
 		.setBodyParameter("password", password)
@@ -124,16 +143,23 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 					String regId = GCMUtils.getRegistrationId(LoginActivity.this);
 					LogUtil.debug(getClass(), "Cached GCM Registration ID: " + regId);
 					
+					cancelProgressDialog();
+					
 					//register as new GCM device if cached registration id is empty
 					if (regId.equals("")) {
 						GCMUtils.registerInBackground(mGcm, LoginActivity.this);
 					}
 				} else {
-					//print error if JSON does not contain necessary data or is empty
-					String error = String.format(
-											getString(R.string.error_login), 
-													  e == null ? "No access_token_found" : e.getMessage());
-					Toast.makeText(LoginActivity.this, error, Toast.LENGTH_SHORT).show();
+					//there was an error, show it
+					String error = "Error while logging in...";
+					if (object != null && object.has("error_description")) {
+						error = object.get("error_description").getAsString();
+					} else if (e != null) {
+						error = "Error while logging in: " + e.getMessage();
+					}
+					
+					L.alert(LoginActivity.this, error);
+					
 					e.printStackTrace();
 					cancelProgressDialog();
 				}
@@ -142,21 +168,55 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		});
 	}
 	
-	public void onLogoutClick(View v) {
-		PreferenceUtils.removeFromPreferences(this, R.string.pref_key_gcm_reg_id);
-		PreferenceUtils.removeFromPreferences(this, R.string.pref_key_login_token);
-		configureViews();
+	private void uploadGcmId(String loginToken, String registrationId) {
+		mProgressDialog = getProgressDialog(R.string.registering_gcm);
+		mProgressDialog.show();
+		Ion.with(this, Configuration.GCM_SETUP_URL)
+		.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
+		.addHeader("Authorization", "Bearer " + loginToken)
+		.setBodyParameter("gcm_device[registration_id]", registrationId)
+		.asJsonObject()
+		.setCallback(new FutureCallback<JsonObject>() {
+			@Override
+			public void onCompleted(Exception e, JsonObject object) {
+				//Debug output
+				if (object != null)
+					LogUtil.debug(getClass(), "Received JSON: " + object.toString());
+				
+				//No errors? Great!
+				if (e == null) {
+					cancelProgressDialog();
+					
+					//reconfigure views because we are logged in now
+					configureViews();
+					
+					//show confirmation
+					Toast.makeText(LoginActivity.this, R.string.login_success, Toast.LENGTH_LONG).show();
+				} else {
+					//Show error
+					String error = "Something went wrong during GCM device registration...";
+					if (object != null && object.has("error_description")) {
+						error = object.get("error_description").getAsString();
+					} else if (e != null) {
+						error = "Error while uploading GCM ID: " + e.getMessage();
+					}
+					
+					L.alert(LoginActivity.this, error);
+					
+					//Remove login token from preferences
+					PreferenceUtils.removeFromPreferences(LoginActivity.this, R.string.pref_key_login_token);
+					PreferenceUtils.removeFromPreferences(LoginActivity.this, R.string.pref_key_gcm_reg_id);
+					cancelProgressDialog();
+				}
+			}
+		});
 	}
-
-//***************************************************************************************************************
-//	Helpers
-//***************************************************************************************************************
 	
-	private ProgressDialog getProgressDialog() {
+	private ProgressDialog getProgressDialog(int messageRes) {
 		ProgressDialog dialog = new ProgressDialog(this);
 		dialog.setIndeterminate(true);
 		dialog.setCancelable(false);
-		dialog.setMessage(getString(R.string.login) + "...");
+		dialog.setMessage(getString(messageRes));
 		return dialog;
 	}
 	
@@ -182,17 +242,21 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 	 */
 	private void configureViews() {
 		if (isLoggedIn()) {
-			tv_must_login.setVisibility(View.INVISIBLE);
+			tv_must_login.setText(R.string.logged_in_text);
 			bt_login.setEnabled(false);
 			bt_logout.setEnabled(true);
 			bt_login.setText(R.string.logged_in);
 			bt_logout.setText(R.string.logout);
+			edit_password.setEnabled(false);
+			edit_username.setEnabled(false);
 		} else {
-			tv_must_login.setVisibility(View.VISIBLE);
+			tv_must_login.setText(R.string.must_login_text);
 			bt_login.setEnabled(true);
 			bt_logout.setEnabled(false);
 			bt_login.setText(R.string.login);
 			bt_logout.setText(R.string.logged_out);
+			edit_password.setEnabled(true);
+			edit_username.setEnabled(true);
 		}
 	}
 	
@@ -239,38 +303,7 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 			//Now we got both, login token and GCM registration Id, so we can send it to our backend
 			String loginToken = PreferenceUtils.getString(this, R.string.pref_key_login_token, "");
 			
-			Ion.with(this, Configuration.GCM_SETUP_URL)
-			.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
-			.addHeader("Authorization", "Bearer " + loginToken)
-			.setBodyParameter("gcm_device[registration_id]", registrationId)
-//			.asString()
-//			.setCallback(new FutureCallback<String>() {
-//
-//				@Override
-//				public void onCompleted(Exception e, String result) {
-//					LogUtil.debug(getClass(), "Result: " + result);
-//				}
-//			});
-			.asJsonObject()
-			.setCallback(new FutureCallback<JsonObject>() {
-				@Override
-				public void onCompleted(Exception e, JsonObject object) {
-					//Debug output
-					if (object != null)
-						LogUtil.debug(getClass(), "Received JSON: " + object.toString());
-					
-					//No errors? Great!
-					if (e == null) {
-						cancelProgressDialog();
-					} else {
-						//Show error if there was one
-						Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-						PreferenceUtils.removeFromPreferences(LoginActivity.this, R.string.pref_key_login_token);
-						PreferenceUtils.removeFromPreferences(LoginActivity.this, R.string.pref_key_gcm_reg_id);
-						cancelProgressDialog();
-					}
-				}
-			});
+			uploadGcmId(loginToken, registrationId);
 		} else {
 			//There went something wrong while registering the device
 			
@@ -285,7 +318,7 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 			configureViews();
 			
 			//Show error
-			Toast.makeText(LoginActivity.this, R.string.error_registering_gcm, Toast.LENGTH_LONG).show();
+			L.alert(this, getString(R.string.error_registering_gcm));
 		}
 	}
 }

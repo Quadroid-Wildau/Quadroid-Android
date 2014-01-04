@@ -22,7 +22,7 @@ public class BitmapUtils {
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text Overlapping Pattern
 
         canvas.drawBitmap(source, 0, 0, paint);
-        canvas.drawText("Testing...", x, y, paint);
+        canvas.drawText(text, x, y, paint);
         
         return source;
 	}
@@ -30,7 +30,7 @@ public class BitmapUtils {
 	public static String saveImageToMemoryCard(Bitmap bitmap, int imageId) {
 		FileOutputStream imageOutStream = null;
 		try {
-			File outFile = StorageUtils.getImageFile(imageId);
+			File outFile = StorageUtils.getImageFile(imageId, true);
 			imageOutStream = new FileOutputStream(outFile);
 			bitmap.compress(CompressFormat.PNG, 100, imageOutStream);
 			return outFile.getPath();

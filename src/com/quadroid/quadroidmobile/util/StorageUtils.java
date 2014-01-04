@@ -1,6 +1,7 @@
 package com.quadroid.quadroidmobile.util;
 
 import java.io.File;
+import java.io.IOException;
 
 import android.os.Environment;
 import android.os.StatFs;
@@ -60,13 +61,30 @@ public class StorageUtils {
 		return bytesAvailable / 1048576;
 	}	
 	
-	public static File getImageFile(int imageId) {
-		return new File(
-						Environment.getExternalStorageDirectory() + 
-						File.separator + 
-						Configuration.ROOT_FOLDER + 
-						File.separator +
-						Configuration.ALARM_FOLDER,
-						imageId + ".png");
+	public static File getImageFile(int imageId, boolean overwrite) throws IOException {
+		File root = new File(
+				Environment.getExternalStorageDirectory() + 
+				File.separator + 
+				Configuration.ROOT_FOLDER + 
+				File.separator +
+				Configuration.ALARM_FOLDER);
+		
+		if (!root.exists())
+			root.mkdirs();
+		
+		File f = new File(
+				Environment.getExternalStorageDirectory() + 
+				File.separator + 
+				Configuration.ROOT_FOLDER + 
+				File.separator +
+				Configuration.ALARM_FOLDER,
+				imageId + ".png");
+		
+		//if file already exists, you can overwrite
+		if (!f.createNewFile() && overwrite) {
+			f.delete();
+			f.createNewFile();
+		}
+		return f;
 	}
 }

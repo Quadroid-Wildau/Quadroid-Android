@@ -40,10 +40,7 @@
             android:layout_marginTop="16dp"
             android:ems="10"
             android:hint="@string/username"
-            android:inputType="text|textNoSuggestions">
-
-            <requestFocus />
-        </EditText>
+            android:inputType="text|textNoSuggestions"/>
 
         <EditText
             android:id="@+id/edit_password"

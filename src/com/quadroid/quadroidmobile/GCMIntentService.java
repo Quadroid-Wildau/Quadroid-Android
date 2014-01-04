@@ -1,4 +1,7 @@
-package com.quadroid.quadroidmobile.gcm;
+package com.quadroid.quadroidmobile;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -9,7 +12,6 @@ import android.widget.Toast;
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-import com.quadroid.quadroidmobile.R;
 import com.quadroid.quadroidmobile.configuration.Configuration;
 import com.quadroid.quadroidmobile.util.BitmapUtils;
 import com.quadroid.quadroidmobile.util.LogUtil;
@@ -45,7 +47,7 @@ public class GCMIntentService extends IntentService {
 			if (lmId >= 0) {
 				final String loginToken = PreferenceUtils.getString(getApplicationContext(), R.string.pref_key_login_token, "");
 				
-				Ion.with(getApplicationContext(), Configuration.LANDMARK_ALARM_URL + lmId)
+				Ion.with(getApplicationContext(), String.format(Configuration.LANDMARK_ALARM_URL, lmId))
 				.addHeader("Authorization", "Bearer " + loginToken)
 				.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
 				.asJsonObject()
@@ -99,9 +101,14 @@ public class GCMIntentService extends IntentService {
 		public void onCompleted(Exception e, Bitmap bitmap) {
 			if (bitmap != null) {
 				Bitmap editableBitmap = bitmap.copy(bitmap.getConfig(), true);
+				
+				Calendar c = Calendar.getInstance();
+				c.setTimeInMillis(date*1000);
+				SimpleDateFormat sdf = new SimpleDateFormat("EEE yyyy-MM-dd HH:mm:ss");
+				
 				editableBitmap = BitmapUtils.drawTextOnBitmap(
 						editableBitmap, 
-						"Lat: " + latitude + ", Long: " + longitude + ", Time: " + date, 10, 10);
+						"Lat: " + latitude + ", Long: " + longitude + ", Time: " + sdf.format(c.getTime()), 10, editableBitmap.getHeight()-30);
 				
 				String filepath = BitmapUtils.saveImageToMemoryCard(editableBitmap, id);
 				if (filepath != null) {

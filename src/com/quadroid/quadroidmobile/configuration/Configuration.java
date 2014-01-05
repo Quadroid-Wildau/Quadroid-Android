@@ -36,5 +36,5 @@ public class Configuration {
 	public static final String BASE_URL = "http://quadroid.dev.wonderweblabs.com/";
 	public static final String LOGIN_URL = BASE_URL + "oauth/token";
 	public static final String GCM_SETUP_URL = BASE_URL + "gcm_devices";
-	public static final String LANDMARK_ALARM_URL = BASE_URL + "landmark_alerts/%1$d";
+	public static final String LANDMARK_ALARM_URL = BASE_URL + "landmark_alerts/%1$s";
 }

@@ -41,7 +41,7 @@ public class NotificationUtil {
 	
 	private static void showSmallNotification(Context context, String filepath) {
 		NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-		int icon = R.drawable.ic_launcher;
+		int icon = R.drawable.logo_notification;
 		long when = System.currentTimeMillis();
 		@SuppressWarnings("deprecation")
 		Notification notification = new Notification(icon, context.getString(R.string.app_name), when);
@@ -84,7 +84,7 @@ public class NotificationUtil {
 	    //build notification using android builder
 	    Notification.Builder mNotificationBuilder = new Notification.Builder(context)
 					.setAutoCancel(false)
-					.setSmallIcon(R.drawable.ic_launcher)
+					.setSmallIcon(R.drawable.logo_notification)
 					.setContentIntent(contentIntent)
 					.setContentText(context.getString(R.string.tap_to_view))
 					.setContentTitle(context.getString(R.string.new_landmark_alarm))

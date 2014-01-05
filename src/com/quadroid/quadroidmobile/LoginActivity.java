@@ -267,6 +267,7 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 	 */
 	private boolean checkPlayServices() {
 	    int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+	    LogUtil.debug(getClass(), "Checking for Play Services. Status: " + resultCode);
 	    if (resultCode != ConnectionResult.SUCCESS) {
 	        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
 	            GooglePlayServicesUtil.getErrorDialog(resultCode, this,

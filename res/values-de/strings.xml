@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Quadroid Mobile</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="pref_key_login_token">login_token</string>
+    <string name="logged_in">Angemeldet</string>
+    <string name="logged_out">Abgemeldet</string>
+    <string name="login">Anmelden</string>
+    <string name="logout">Abmelden</string>
+    <string name="username">Benutername</string>
+    <string name="password">Passwort</string>
+    <string name="welcome">Wilkommen bei Quadroid</string>
+    <string name="logging_in">Anmeldung läuft...</string>
+    <string name="registering_gcm">Registrierung für Cloud Messaging läuft...</string>
+    <string name="login_success">Erfolgreich angemeldet! Sie werden nun Quadroid Landmarkenalarme empfangen!</string>
+    <string name="must_login_text">Um Quadroid zu nutzen und Landmarkenalarme zu empfangen, müssen Sie sich mit Ihrem Benuternamen und Passwort anmelden.</string>
+    <string name="logged_in_text">Sie sind angemeldet</string>
+    <string name="pref_key_gcm_reg_id">gcm_registration_id</string>
+    <string name="error_registering_gcm">Fehler bei der GCM Einrichtung. Bitte erneut versuchen.</string>
+    <string name="tap_to_view">Anklciken zum Ansehen</string>
+    <string name="new_landmark_alarm">Neuer Landmarkenalarm</string>
+    <string name="view">Ansehen</string>
+    <string name="error_login">Fehler beim Anmelden: %1$s</string>
+	<string name="error_lm_alarm_ivalid">Kontne Landmarkenalarm nicht empfangen: Fehlerhaftes Bild</string>
+</resources>

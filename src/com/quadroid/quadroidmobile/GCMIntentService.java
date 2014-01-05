@@ -40,11 +40,11 @@ public class GCMIntentService extends IntentService {
 			//Message contains payload
 			LogUtil.debug(getClass(), "GCM notification has payload");
 			
-			int lmId = Integer.parseInt(extras.getString("lmAlarmId"));
+			String lmId = extras.getString("lmAlarmId");
 			
 			LogUtil.debug(getClass(), "Landmark alarm id: " + lmId);
 			
-			if (lmId >= 0) {
+			if (!lmId.equals("")) {
 				final String loginToken = PreferenceUtils.getString(getApplicationContext(), R.string.pref_key_login_token, "");
 				
 				Ion.with(getApplicationContext(), String.format(Configuration.LANDMARK_ALARM_URL, lmId))
@@ -108,7 +108,7 @@ public class GCMIntentService extends IntentService {
 				
 				editableBitmap = BitmapUtils.drawTextOnBitmap(
 						editableBitmap, 
-						"Lat: " + latitude + ", Long: " + longitude + ", Time: " + sdf.format(c.getTime()), 10, editableBitmap.getHeight()-30);
+						"Lat: " + latitude + ", Long: " + longitude + ", Time: " + sdf.format(c.getTime()), 10, editableBitmap.getHeight()-10);
 				
 				String filepath = BitmapUtils.saveImageToMemoryCard(editableBitmap, id);
 				if (filepath != null) {

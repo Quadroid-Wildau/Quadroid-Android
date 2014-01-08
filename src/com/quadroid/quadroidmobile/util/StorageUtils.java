@@ -3,6 +3,7 @@ package com.quadroid.quadroidmobile.util;
 import java.io.File;
 import java.io.IOException;
 
+import android.content.Context;
 import android.os.Environment;
 import android.os.StatFs;
 
@@ -61,7 +62,16 @@ public class StorageUtils {
 		return bytesAvailable / 1048576;
 	}	
 	
-	public static File getImageFile(int imageId, boolean overwrite) throws IOException {
+	public static File getImageFile(Context context, int imageId, boolean overwrite) throws IOException {
+		if (!isMemoryCardMounted()) {
+			File cache = new File(context.getFilesDir(), 
+								  "cached.png");
+			
+			LogUtil.debug("File: " + cache.getAbsolutePath());
+			
+			return cache;
+		}
+		
 		File root = new File(
 				Environment.getExternalStorageDirectory() + 
 				File.separator + 

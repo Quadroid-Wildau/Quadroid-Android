@@ -4,7 +4,10 @@ import java.io.IOException;
 
 import net.louislam.android.L;
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -270,8 +273,15 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 	    LogUtil.debug(getClass(), "Checking for Play Services. Status: " + resultCode);
 	    if (resultCode != ConnectionResult.SUCCESS) {
 	        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-	            GooglePlayServicesUtil.getErrorDialog(resultCode, this,
-	                    PLAY_SERVICES_RESOLUTION_REQUEST).show();
+	            Dialog dlg = GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+	                    PLAY_SERVICES_RESOLUTION_REQUEST);
+	            dlg.setOnCancelListener(new OnCancelListener() {
+					@Override
+					public void onCancel(DialogInterface dialog) {
+						finish();
+					}
+				});
+	            dlg.show();
 	        } else {
 	            LogUtil.debug(getClass(), "Google Play Services unrecoverable error. Exiting!");
 	            finish();

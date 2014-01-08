@@ -3,13 +3,12 @@ package com.quadroid.quadroidmobile.util;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 
 public class BitmapUtils {
 
@@ -19,7 +18,7 @@ public class BitmapUtils {
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(Color.WHITE); // Text Color
         paint.setStrokeWidth(12); // Text Size
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)); // Text Overlapping Pattern
+        paint.setAntiAlias(true);
 
         canvas.drawBitmap(source, 0, 0, paint);
         canvas.drawText(text, x, y, paint);
@@ -27,10 +26,17 @@ public class BitmapUtils {
         return source;
 	}
 	
-	public static String saveImageToMemoryCard(Bitmap bitmap, int imageId) {
+	/**
+	 * Saves image to a file and returns the filepath
+	 * @param context
+	 * @param bitmap
+	 * @param imageId
+	 * @return
+	 */
+	public static String saveImageToMemoryCard(Context context, Bitmap bitmap, int imageId) {
 		FileOutputStream imageOutStream = null;
 		try {
-			File outFile = StorageUtils.getImageFile(imageId, true);
+			File outFile = StorageUtils.getImageFile(context, imageId, true);
 			imageOutStream = new FileOutputStream(outFile);
 			bitmap.compress(CompressFormat.PNG, 100, imageOutStream);
 			return outFile.getPath();

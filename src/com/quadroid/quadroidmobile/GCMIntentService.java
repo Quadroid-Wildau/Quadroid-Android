@@ -110,7 +110,7 @@ public class GCMIntentService extends IntentService {
 						editableBitmap, 
 						"Lat: " + latitude + ", Long: " + longitude + ", Time: " + sdf.format(c.getTime()), 10, editableBitmap.getHeight()-10);
 				
-				String filepath = BitmapUtils.saveImageToMemoryCard(editableBitmap, id);
+				String filepath = BitmapUtils.saveImageToMemoryCard(getApplicationContext(), editableBitmap, id);
 				if (filepath != null) {
 					NotificationUtil.showNotification(getApplicationContext(), filepath);
 				}

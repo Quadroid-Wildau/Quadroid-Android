@@ -29,16 +29,18 @@ import com.quadroid.quadroidmobile.util.PreferenceUtils;
 
 /**
  * 
+ * This {@link Activity} is used for the login process. It basically just supports two actions: Login and logout.
+ * When the user logs in, the app connects to Quadroid server and gets a login token. If this was
+ * successful, it afterwards gets the device registration id from GCM.
+ * If this is also successful, the device registration id gets stored on the Quadroid server.
+ * Both, token and registration id are stored as app preferences for later use.
+ * <p>
+ * When the user logs out, the GCM registration id and Quadroid login token are deleted from
+ * preferences and the device unregisters itself at the GCM servers.
+ *
  * @author Georg Baumgarten
  * 
- * This {@link Activity} is used for login. It basically just supports two actions: Login and logout.
- * When the user logs in, the app conenct to Quadroid server and gets a login token. If this was
- * successful, it connected to the GCM servers and gets the device registration id.
- * If this is also successful, the device registration id gets stored on the Quadroid server.
- * Both, token and registration id are stored as app preferences.
- * <p>
- * On logout, only the saved preferences which hold login token and GCM registration id are deleted.
- *
+ * @version 1.0
  */
 public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 
@@ -95,6 +97,10 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		login(username, password);
 	}
 	
+	/**
+	 * Called when the Logout button was clicked
+	 * @param v
+	 */
 	public void onLogoutClick(View v) {
 		if (mGcm == null)
 			mGcm = GoogleCloudMessaging.getInstance(this);

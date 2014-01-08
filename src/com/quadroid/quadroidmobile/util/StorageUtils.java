@@ -62,7 +62,20 @@ public class StorageUtils {
 		return bytesAvailable / 1048576;
 	}	
 	
+	/**
+	 * This method return a {@link File} that can be used to save an image.
+	 * @param context
+	 * 			A context
+	 * @param imageId
+	 * 			The image id (is used as filename)
+	 * @param overwrite
+	 * 			Should existing files be overwritten?
+	 * @return
+	 * 			{@link File} object
+	 * @throws IOException
+	 */
 	public static File getImageFile(Context context, int imageId, boolean overwrite) throws IOException {
+		//return file that points to internal memory if there is no memory card installed
 		if (!isMemoryCardMounted()) {
 			File cache = new File(context.getFilesDir(), 
 								  "cached.png");
@@ -72,16 +85,17 @@ public class StorageUtils {
 			return cache;
 		}
 		
+		//create folder if it doesn't exist
 		File root = new File(
 				Environment.getExternalStorageDirectory() + 
 				File.separator + 
 				Configuration.ROOT_FOLDER + 
 				File.separator +
 				Configuration.ALARM_FOLDER);
-		
 		if (!root.exists())
 			root.mkdirs();
 		
+		//create the file
 		File f = new File(
 				Environment.getExternalStorageDirectory() + 
 				File.separator + 

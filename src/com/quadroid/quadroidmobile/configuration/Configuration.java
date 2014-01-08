@@ -33,8 +33,16 @@ public class Configuration {
      */
 	public static final String SENDER_ID = "983484157298";
 	
+	/**
+	 * Base URL
+	 */
 	public static final String BASE_URL = "http://quadroid.dev.wonderweblabs.com/";
+	
 	public static final String LOGIN_URL = BASE_URL + "oauth/token";
 	public static final String GCM_SETUP_URL = BASE_URL + "gcm_devices";
+	
+	/**
+	 * Landmarks URL, needs to be formatted when used using String.format()
+	 */
 	public static final String LANDMARK_ALARM_URL = BASE_URL + "landmark_alerts/%1$s";
 }

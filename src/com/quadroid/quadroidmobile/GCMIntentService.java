@@ -47,6 +47,8 @@ public class GCMIntentService extends IntentService {
 			if (!lmId.equals("")) {
 				final String loginToken = PreferenceUtils.getString(getApplicationContext(), R.string.pref_key_login_token, "");
 				
+				LogUtil.debug(getClass(), "Downloading Landmark Alarm with Login Token: " + loginToken);
+				
 				Ion.with(getApplicationContext(), String.format(Configuration.LANDMARK_ALARM_URL, lmId))
 				.addHeader("Authorization", "Bearer " + loginToken)
 				.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
@@ -64,7 +66,11 @@ public class GCMIntentService extends IntentService {
 				e.printStackTrace();
 			}
 			
+			LogUtil.debug(getClass(), "Downloaded Landmark Alarm...");
+			
 			if (object != null && object.has("landmark_alert")) {
+				LogUtil.debug(getClass(), "Landmark Alarm: " + object);
+				
 				JsonObject lmAlert = object.getAsJsonObject("landmark_alert");
 				final String imageUrl = lmAlert.get("image_path").getAsString();
 				final float latitude = lmAlert.get("latitude").getAsFloat();
@@ -72,6 +78,7 @@ public class GCMIntentService extends IntentService {
 				final long date = lmAlert.get("detection_date").getAsLong();
 				final int id = lmAlert.get("id").getAsInt();
 				
+				LogUtil.debug(getClass(), "Downloading Landmark Image...");
 				Ion.with(getApplicationContext())
 				.load(imageUrl)
 				.asBitmap()
@@ -99,7 +106,10 @@ public class GCMIntentService extends IntentService {
 		
 		@Override
 		public void onCompleted(Exception e, Bitmap bitmap) {
+			LogUtil.debug(getClass(), "Downloading Landmark Image finished");
 			if (bitmap != null) {
+				LogUtil.debug(getClass(), "Landmark Image: " + bitmap.getWidth() + "*" + bitmap.getHeight());
+				
 				Bitmap editableBitmap = bitmap.copy(bitmap.getConfig(), true);
 				
 				Calendar c = Calendar.getInstance();
@@ -109,6 +119,8 @@ public class GCMIntentService extends IntentService {
 				editableBitmap = BitmapUtils.drawTextOnBitmap(
 						editableBitmap, 
 						"Lat: " + latitude + ", Long: " + longitude + ", Time: " + sdf.format(c.getTime()), 10, editableBitmap.getHeight()-10);
+				
+				LogUtil.debug(getClass(), "Altered Image: " + editableBitmap.getWidth() + "*" + editableBitmap.getHeight());
 				
 				String filepath = BitmapUtils.saveImageToMemoryCard(getApplicationContext(), editableBitmap, id);
 				if (filepath != null) {

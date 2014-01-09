@@ -15,6 +15,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION;
+import android.support.v4.app.NotificationCompat;
 
 import com.quadroid.quadroidmobile.R;
 
@@ -33,18 +34,17 @@ public class NotificationUtil {
 	 */
 	public static void showNotification(Context context, String filepath) {
 		if (VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+			LogUtil.debug("Showing Big Picture Notification with Image: " + filepath);
 			showBigPictureNotification(context, filepath);
 		} else {
+			LogUtil.debug("Showing Small Notification with Image: " + filepath);
 			showSmallNotification(context, filepath);
 		}
 	}
 	
 	private static void showSmallNotification(Context context, String filepath) {
 		NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-		int icon = R.drawable.logo_notification;
-		long when = System.currentTimeMillis();
-		@SuppressWarnings("deprecation")
-		Notification notification = new Notification(icon, context.getString(R.string.app_name), when);
+		
 		Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 		
 		//configure the intent and pending intent that is fired when the user clicks the notification
@@ -57,11 +57,20 @@ public class NotificationUtil {
 	    									intent, 
 	    									0);
 	    
-		notification.contentIntent = contentIntent;
-		notification.ledARGB = Color.parseColor("#ffff00ff");
-		notification.ledOnMS = 500;
-		notification.ledOffMS = 5000;
-		notification.sound = alarmSound;
+	    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
+		mBuilder.setAutoCancel(false);
+		mBuilder.setTicker(context.getString(R.string.new_landmark_alarm));
+		mBuilder.setSmallIcon(R.drawable.logo_notification);
+		mBuilder.setContentText(context.getString(R.string.tap_to_view));
+		mBuilder.setContentTitle(context.getString(R.string.new_landmark_alarm));
+		mBuilder.setLights(Color.parseColor("#ffff00ff"), 500, 5000);
+		mBuilder.setContentIntent(contentIntent);
+		mBuilder.setSound(alarmSound);
+		mBuilder.setWhen(System.currentTimeMillis());
+		mBuilder.addAction(android.R.drawable.ic_menu_view, context.getString(R.string.view), contentIntent);
+	    
+		Notification notification = mBuilder.build();
+		
 		//show notification
 		mNotificationManager.notify(NOTIFICATION_ID, notification);
 	}
@@ -82,22 +91,24 @@ public class NotificationUtil {
 	    Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 	    
 	    //build notification using android builder
-	    Notification.Builder mNotificationBuilder = new Notification.Builder(context)
-					.setAutoCancel(false)
-					.setSmallIcon(R.drawable.logo_notification)
-					.setContentIntent(contentIntent)
-					.setContentText(context.getString(R.string.tap_to_view))
-					.setContentTitle(context.getString(R.string.new_landmark_alarm))
-					.setLights(Color.parseColor("#ffff00ff"), 500, 5000)
-					.setSound(alarmSound)
-					.addAction(android.R.drawable.ic_menu_view, context.getString(R.string.view), contentIntent);
+	    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
+	    mBuilder.setAutoCancel(false);
+		mBuilder.setTicker(context.getString(R.string.new_landmark_alarm));
+		mBuilder.setSmallIcon(R.drawable.logo_notification);
+		mBuilder.setContentText(context.getString(R.string.tap_to_view));
+		mBuilder.setContentTitle(context.getString(R.string.new_landmark_alarm));
+		mBuilder.setLights(Color.parseColor("#ffff00ff"), 500, 5000);
+		mBuilder.setContentIntent(contentIntent);
+		mBuilder.setSound(alarmSound);
+		mBuilder.setWhen(System.currentTimeMillis());
+		mBuilder.addAction(android.R.drawable.ic_menu_view, context.getString(R.string.view), contentIntent);
 	    
 	    
 	   //decode image of landmark alert
 	    Bitmap image = BitmapFactory.decodeFile(filePath);
 		
 	    //create notification
-		Notification notification = new Notification.BigPictureStyle(mNotificationBuilder)
+		Notification notification = new NotificationCompat.BigPictureStyle(mBuilder)
 											.bigPicture(image)
 											.setSummaryText(context.getString(R.string.tap_to_view))
 											.build();

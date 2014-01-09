@@ -74,11 +74,6 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 		configureViews();
 	}
 	
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-	}
-	
 //***************************************************************************************************************
 //	View Listeners
 //***************************************************************************************************************
@@ -122,8 +117,11 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 	
 	private void login(String username, String password) {
 		LogUtil.debug(getClass(), "Starting Login Process...");
+		
+		//Show dialog
 		mProgressDialog = getProgressDialog(R.string.logging_in);
 		mProgressDialog.show();
+		
 		Ion.with(this, Configuration.LOGIN_URL)
 		.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
 		.setBodyParameter("grant_type", "password")
@@ -178,8 +176,10 @@ public class LoginActivity extends Activity implements OnGcmRegisteredListener {
 	}
 	
 	private void uploadGcmId(String loginToken, String registrationId) {
+		//Show dialog
 		mProgressDialog = getProgressDialog(R.string.registering_gcm);
 		mProgressDialog.show();
+		
 		Ion.with(this, Configuration.GCM_SETUP_URL)
 		.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
 		.addHeader("Authorization", "Bearer " + loginToken)

@@ -1,9 +1,12 @@
 package com.quadroid.quadroidmobile.util;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.os.Environment;
 import android.os.StatFs;
 
@@ -11,7 +14,7 @@ import com.quadroid.quadroidmobile.configuration.Configuration;
 
 /**
  * 
- * Utility class for memory card.
+ * Utility class for storage.
  * 
  * @author Georg Baumgarten
  *
@@ -110,5 +113,34 @@ public class StorageUtils {
 			f.createNewFile();
 		}
 		return f;
+	}
+	
+	/**
+	 * Saves image to a file and returns the filepath
+	 * @param context
+	 * 			A context
+	 * @param bitmap
+	 * 			The bitmap to save
+	 * @param imageId
+	 * 			Id of the image (is used as filename)
+	 * @return
+	 * 			File path of the saved image as string
+	 * 			
+	 */
+	public static String saveImageToMemoryCard(Context context, Bitmap bitmap, int imageId) {
+		FileOutputStream imageOutStream = null;
+		try {
+			File outFile = StorageUtils.getImageFile(context, imageId, true);
+			imageOutStream = new FileOutputStream(outFile);
+			bitmap.compress(CompressFormat.PNG, 100, imageOutStream);
+			return outFile.getPath();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				imageOutStream.close();
+			} catch (Exception e) {}
+		}
+		return null;
 	}
 }

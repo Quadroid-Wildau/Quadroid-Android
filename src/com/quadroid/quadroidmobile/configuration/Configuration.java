@@ -38,7 +38,14 @@ public class Configuration {
 	 */
 	public static final String BASE_URL = "http://quadroid.dev.wonderweblabs.com/";
 	
+	/**
+	 * Login URL
+	 */
 	public static final String LOGIN_URL = BASE_URL + "oauth/token";
+	
+	/**
+	 * GCM setup URL, used for sending GCM registration id
+	 */
 	public static final String GCM_SETUP_URL = BASE_URL + "gcm_devices";
 	
 	/**

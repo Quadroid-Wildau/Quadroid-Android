@@ -17,7 +17,17 @@ import com.quadroid.quadroidmobile.util.BitmapUtils;
 import com.quadroid.quadroidmobile.util.LogUtil;
 import com.quadroid.quadroidmobile.util.NotificationUtil;
 import com.quadroid.quadroidmobile.util.PreferenceUtils;
+import com.quadroid.quadroidmobile.util.StorageUtils;
 
+/**
+ * This class is used for processing a new landmark alarm. It connects to Quadroid server, downloads
+ * the landmark image and adds the meta information to it, by drawing it directly on the image.
+ * Then, a notification will be created.
+ * 
+ * @author Georg Baumgarten
+ * @version 1.0
+ *
+ */
 public class GCMIntentService extends IntentService {
 	
 	private Intent intent;
@@ -40,15 +50,18 @@ public class GCMIntentService extends IntentService {
 			//Message contains payload
 			LogUtil.debug(getClass(), "GCM notification has payload");
 			
+			//Extract landmark alarm ID
 			String lmId = extras.getString("lmAlarmId");
 			
 			LogUtil.debug(getClass(), "Landmark alarm id: " + lmId);
 			
-			if (!lmId.equals("")) {
+			if (!lmId.isEmpty()) {
+				//get login token
 				final String loginToken = PreferenceUtils.getString(getApplicationContext(), R.string.pref_key_login_token, "");
 				
 				LogUtil.debug(getClass(), "Downloading Landmark Alarm with Login Token: " + loginToken);
 				
+				//GET landmark alarm
 				Ion.with(getApplicationContext(), String.format(Configuration.LANDMARK_ALARM_URL, lmId))
 				.addHeader("Authorization", "Bearer " + loginToken)
 				.addHeader("Accept", "application/vnd.quadroid-server-v1+json")
@@ -62,6 +75,7 @@ public class GCMIntentService extends IntentService {
 		@Override
 		public void onCompleted(Exception e, JsonObject object) {
 			if (e != null) {
+				//there was an error, show it
 				Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
 				e.printStackTrace();
 			}
@@ -71,6 +85,7 @@ public class GCMIntentService extends IntentService {
 			if (object != null && object.has("landmark_alert")) {
 				LogUtil.debug(getClass(), "Landmark Alarm: " + object);
 				
+				//extract information from JSON
 				JsonObject lmAlert = object.getAsJsonObject("landmark_alert");
 				final String imageUrl = lmAlert.get("image_path").getAsString();
 				final float latitude = lmAlert.get("latitude").getAsFloat();
@@ -79,11 +94,14 @@ public class GCMIntentService extends IntentService {
 				final int id = lmAlert.get("id").getAsInt();
 				
 				LogUtil.debug(getClass(), "Downloading Landmark Image...");
+				
+				//Download landmark image
 				Ion.with(getApplicationContext())
 				.load(imageUrl)
 				.asBitmap()
 				.setCallback(new CustomBitmapCallback(latitude, longitude, date, id));
 			} else {
+				//The JSON did not contain the landmark alert, show error
 				Toast.makeText(getApplicationContext(), R.string.error_lm_alarm_ivalid, Toast.LENGTH_SHORT).show();
 				GCMWakefulBroadcastReceiver.completeWakefulIntent(intent);
 			}
@@ -112,21 +130,27 @@ public class GCMIntentService extends IntentService {
 				
 				Bitmap editableBitmap = bitmap.copy(bitmap.getConfig(), true);
 				
+				//format detection time
 				Calendar c = Calendar.getInstance();
 				c.setTimeInMillis(date*1000);
 				SimpleDateFormat sdf = new SimpleDateFormat("EEE yyyy-MM-dd HH:mm:ss");
 				
+				//create bitmap with text
 				editableBitmap = BitmapUtils.drawTextOnBitmap(
 						editableBitmap, 
 						"Lat: " + latitude + ", Long: " + longitude + ", Time: " + sdf.format(c.getTime()), 10, editableBitmap.getHeight()-10);
 				
 				LogUtil.debug(getClass(), "Altered Image: " + editableBitmap.getWidth() + "*" + editableBitmap.getHeight());
 				
-				String filepath = BitmapUtils.saveImageToMemoryCard(getApplicationContext(), editableBitmap, id);
+				//save bitmap on filesystem
+				String filepath = StorageUtils.saveImageToMemoryCard(getApplicationContext(), editableBitmap, id);
 				if (filepath != null) {
+					//if it was saved successfully, show notification
 					NotificationUtil.showNotification(getApplicationContext(), filepath);
 				}
 			}
+			
+			//Notify out Broadcastreceiver that we completed our work, so it can release the wakelock
 			GCMWakefulBroadcastReceiver.completeWakefulIntent(intent);
 		}
 		

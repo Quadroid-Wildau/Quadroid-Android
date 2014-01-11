@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.ProgressCallback;
 import com.quadroid.quadroidmobile.configuration.Configuration;
 import com.quadroid.quadroidmobile.util.BitmapUtils;
 import com.quadroid.quadroidmobile.util.LogUtil;
@@ -98,6 +99,15 @@ public class GCMIntentService extends IntentService {
 				//Download landmark image
 				Ion.with(getApplicationContext())
 				.load(imageUrl)
+				.progress(new ProgressCallback() {
+					@Override
+					public void onProgress(int downloaded, int total) {
+						int downloadedKb = downloaded / 1024;
+						int totalKb = total / 1024;
+						int percent = (int) ((float)((float)downloaded/(float)total) * 100);
+						LogUtil.debug(getClass(), "Download Process: " + downloadedKb + "/" + totalKb + "Kb (" + percent + "%)");
+					}
+				})
 				.asBitmap()
 				.setCallback(new CustomBitmapCallback(latitude, longitude, date, id));
 			} else {
@@ -125,6 +135,11 @@ public class GCMIntentService extends IntentService {
 		@Override
 		public void onCompleted(Exception e, Bitmap bitmap) {
 			LogUtil.debug(getClass(), "Downloading Landmark Image finished");
+			
+			if (e != null) {
+				e.printStackTrace();
+			}
+			
 			if (bitmap != null) {
 				LogUtil.debug(getClass(), "Landmark Image: " + bitmap.getWidth() + "*" + bitmap.getHeight());
 				
@@ -132,7 +147,7 @@ public class GCMIntentService extends IntentService {
 				
 				//format detection time
 				Calendar c = Calendar.getInstance();
-				c.setTimeInMillis(date*1000);
+				c.setTimeInMillis(date);
 				SimpleDateFormat sdf = new SimpleDateFormat("EEE yyyy-MM-dd HH:mm:ss");
 				
 				//create bitmap with text
